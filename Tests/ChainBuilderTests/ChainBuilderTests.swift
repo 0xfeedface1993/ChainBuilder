@@ -9,19 +9,39 @@ import XCTest
 import ChainBuilderMacros
 
 let testMacros: [String: Macro.Type] = [
-    "stringify": StringifyMacro.self,
+    "ChainBuilder": ChainBuilderMacro.self,
 ]
 #endif
 
 final class ChainBuilderTests: XCTestCase {
-    func testMacro() throws {
+    func testChainMacro() throws {
         #if canImport(ChainBuilderMacros)
         assertMacroExpansion(
             """
-            #stringify(a + b)
+            @ChainBuilder
+            public struct User: Equatable {
+                var name: String
+                let age: Int
+            }
             """,
             expandedSource: """
-            (a + b, "a + b")
+            public struct User: Equatable {
+                var name: String
+                let age: Int
+
+                public init(name: String, age: Int) {
+                    self.name = name
+                    self.age = age
+                }
+
+                public func name(_ value: String) -> Self {
+                    Self.init(name: value, age: age)
+                }
+
+                public func age(_ value: Int) -> Self {
+                    Self.init(name: name, age: value)
+                }
+            }
             """,
             macros: testMacros
         )
@@ -29,16 +49,35 @@ final class ChainBuilderTests: XCTestCase {
         throw XCTSkip("macros are only supported when running tests for the host platform")
         #endif
     }
-
-    func testMacroWithStringLiteral() throws {
+    
+    func testChainInteralMacro() throws {
         #if canImport(ChainBuilderMacros)
         assertMacroExpansion(
-            #"""
-            #stringify("Hello, \(name)")
-            """#,
-            expandedSource: #"""
-            ("Hello, \(name)", #""Hello, \(name)""#)
-            """#,
+            """
+            @ChainBuilder
+            struct User: Equatable {
+                var name: String
+                private let age: Int
+                private var sex: Bool
+            }
+            """,
+            expandedSource: """
+            struct User: Equatable {
+                var name: String
+                private let age: Int
+                private var sex: Bool
+
+                init(name: String, age: Int, sex: Bool) {
+                    self.name = name
+                    self.age = age
+                    self.sex = sex
+                }
+
+                func name(_ value: String) -> Self {
+                    Self.init(name: value, age: age, sex: sex)
+                }
+            }
+            """,
             macros: testMacros
         )
         #else

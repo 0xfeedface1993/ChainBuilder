@@ -1,8 +1,22 @@
 import ChainBuilder
 
-let a = 17
-let b = 25
+@ChainBuiler
+struct User: Equatable {
+    var name: String
+    private let age: Int
+    let qq: String
+    var isTest: Double
+    private var sex: Bool = false
+    
+}
 
-let (result, code) = #stringify(a + b)
+//
+//@ChainBuiler
+//class UserBan {
+//    var name: String
+//    let age: Int
+//}
 
-print("The value \(result) was produced by the code \"\(code)\"")
+let user = User(name: "test", age: 100, qq: "123444", isTest: 0.0, sex: true)
+let old = user.name("cococo")
+print("old user \(old)")
