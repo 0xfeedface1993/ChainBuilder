@@ -79,6 +79,18 @@ package extension VariableDeclSyntax {
         return false
     }
     
+    var isStatic: Bool {
+        for modifier in modifiers {
+            switch modifier.name.text {
+            case TokenSyntax.keyword(.static).text:
+                return true
+            default:
+                continue
+            }
+        }
+        return false
+    }
+    
     var hasDefaultValue: Bool {
         bindings.first?.initializer != nil
     }
@@ -94,6 +106,11 @@ extension MemberBlockItemListSyntax {
             guard varDecl.bindings.first?.accessorBlock == nil else {
                 return nil
             }
+            
+            guard !varDecl.isStatic else {
+                return nil
+            }
+            
             return VariableDeclSyntaxState(metadata: varDecl)
         }
     }
@@ -160,12 +177,14 @@ package struct VariableDeclSyntaxState {
     let isVar: Bool
     let hasDefaultValue: Bool
     let isPrivate: Bool
+    let isStatic: Bool
     
     init(metadata: VariableDeclSyntax) {
         self.metadata = metadata
         self.isVar = metadata.bindingSpecifier == .keyword(.var)
         self.hasDefaultValue = metadata.bindings.first?.initializer != nil
         self.isPrivate = metadata.isPrivate
+        self.isStatic = metadata.isStatic
     }
 }
 
@@ -185,9 +204,7 @@ struct FunctionParameterPreparedData {
         guard let type = metadata.bindings.first?.typeAnnotation?.type else {
             return nil
         }
-//        guard !metadata.hasDefaultValue else {
-//            return nil
-//        }
+        
         self.metadata = metadata
         self.firstName = identifier
         self.type = type

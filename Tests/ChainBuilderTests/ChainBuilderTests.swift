@@ -22,12 +22,14 @@ final class ChainBuilderTests: XCTestCase {
             public struct User: Equatable {
                 var name: String
                 let age: Int
+                static let none = User(name: "", age: 0)
             }
             """,
             expandedSource: """
             public struct User: Equatable {
                 var name: String
                 let age: Int
+                static let none = User(name: "", age: 0)
 
                 public init(name: String, age: Int) {
                     self.name = name
