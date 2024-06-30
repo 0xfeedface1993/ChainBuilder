@@ -3,6 +3,35 @@ import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 
+/// Implementation of the `ChainBuiler` macro, which automatic
+/// create init method (include all store variable parameters),
+/// and create value modifier function for every public variable. For example
+///
+///     @ChainBuilder
+///     public struct User: Equatable {
+///         var name: String
+///         let age: Int
+///     }
+///
+///  will expand to
+///
+///     public struct User: Equatable {
+///         var name: String
+///         let age: Int
+///
+///         public init(name: String, age: Int) {
+///             self.name = name
+///             self.age = age
+///         }
+///
+///         public func name(_ value: String) -> Self {
+///             Self.init(name: value, age: age)
+///         }
+///
+///         public func age(_ value: Int) -> Self {
+///             Self.init(name: name, age: value)
+///         }
+///     }
 public struct ChainBuilderMacro: MemberMacro {
     public static func expansion(of node: AttributeSyntax, providingMembersOf declaration: some DeclGroupSyntax, in context: some MacroExpansionContext) throws -> [DeclSyntax] {
         
