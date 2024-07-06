@@ -198,11 +198,16 @@ struct FunctionParameterPreparedData {
     }
     
     init?(metadata: VariableDeclSyntax) {
-        guard let identifier = metadata.firstIdentifier else {
+        guard var identifier = metadata.firstIdentifier else {
             return nil
         }
         guard let type = metadata.bindings.first?.typeAnnotation?.type else {
             return nil
+        }
+        
+        if identifier.text.hasPrefix("_") {
+            let name = String(identifier.text[identifier.text.index(after: identifier.text.startIndex)...])
+            identifier = TokenSyntax(.identifier(name), leadingTrivia: identifier.leadingTrivia, trailingTrivia: identifier.trailingTrivia, presence: identifier.presence)
         }
         
         self.metadata = metadata
