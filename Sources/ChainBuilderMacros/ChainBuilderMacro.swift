@@ -198,25 +198,30 @@ struct FunctionParameterPreparedData {
     }
     
     init?(metadata: VariableDeclSyntax) {
-        guard var identifier = metadata.firstIdentifier else {
+        guard let identifier = metadata.firstIdentifier else {
             return nil
         }
         guard let type = metadata.bindings.first?.typeAnnotation?.type else {
             return nil
         }
         
-        if identifier.text.hasPrefix("_") {
-            let name = String(identifier.text[identifier.text.index(after: identifier.text.startIndex)...])
-            identifier = TokenSyntax(.identifier(name), leadingTrivia: identifier.leadingTrivia, trailingTrivia: identifier.trailingTrivia, presence: identifier.presence)
-        }
-        
         self.metadata = metadata
-        self.firstName = identifier
+        self.firstName = identifier.noDashPrefixSyntax
         self.type = type
     }
     
     func syntax(trailingComma: TokenSyntax?) -> FunctionParameterSyntax {
         FunctionParameterSyntax(firstName: firstName, type: type, trailingComma: trailingComma)
+    }
+}
+
+extension TokenSyntax {
+    var noDashPrefixSyntax: TokenSyntax {
+        if text.hasPrefix("_") {
+            let name = String(text[text.index(after: text.startIndex)...])
+            return TokenSyntax(.identifier(name), leadingTrivia: leadingTrivia, trailingTrivia: trailingTrivia, presence: presence)
+        }
+        return self
     }
 }
 
@@ -229,7 +234,7 @@ struct CodeBlockItemPrepareData {
         }
         let selfIdentifier = DeclReferenceExprSyntax(baseName: .keyword(.self))
         let lhs = ExprSyntax(MemberAccessExprSyntax(base: selfIdentifier, declName: DeclReferenceExprSyntax(baseName: identifier)))
-        let rhs = ExprSyntax(DeclReferenceExprSyntax(baseName: identifier))
+        let rhs = ExprSyntax(DeclReferenceExprSyntax(baseName: identifier.noDashPrefixSyntax))
         self.item = .expr(
             ExprSyntax(
                 InfixOperatorExprSyntax(leftOperand: lhs, operator: AssignmentExprSyntax(), rightOperand: rhs)
@@ -307,7 +312,7 @@ struct FunctionStatementPrepareData {
         guard let itemIdentifier = members[index].firstIdentifier else {
             return nil
         }
-        self.label = itemIdentifier
+        self.label = itemIdentifier.noDashPrefixSyntax
         self.trailingComma = index < members.count - 1 ? .commaToken():nil
         self.expressionBaseName = primaryMemberIdentifier == itemIdentifier ? valueIdentifier:itemIdentifier
     }
